@@ -1,0 +1,9 @@
+<launch>
+  <arg name="map_file" default="$(find bookstore_service_robot)/maps/map.yaml"/>
+
+  <env name="TURTLEBOT3_MODEL" value="waffle_pi"/>
+
+  <include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch">
+    <arg name="map_file" value="$(arg map_file)"/>
+  </include>
+</launch>

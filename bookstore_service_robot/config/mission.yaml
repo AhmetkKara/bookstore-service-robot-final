@@ -1,0 +1,27 @@
+locations:
+  - NOVEL_SECTION
+  - CHECKOUT_AREA
+  - SCIENCE_SECTION
+  - INFORMATION_DESK
+
+CHECKOUT_AREA:
+  goal: {x: 0.22, y: -3.67, yaw: 0.0}
+  qr_expected: "LOCATION=CHECKOUT_AREA"
+
+SCIENCE_SECTION:
+  goal: {x: 5.60, y: 1.07, yaw: 0.0}
+  qr_expected: "LOCATION=SCIENCE_SECTION"
+
+INFORMATION_DESK:
+  goal: {x: -0.76, y: 5.58, yaw: 0.0}
+  qr_expected: "LOCATION=INFORMATION_DESK"
+
+NOVEL_SECTION:
+  goal: {x: -4.98, y: -2.94, yaw: 3.14}
+  qr_expected: "LOCATION=NOVEL_SECTION"
+
+settings:
+  move_timeout: 90
+  move_retries: 1
+  qr_retries: 2
+  qr_timeout: 10

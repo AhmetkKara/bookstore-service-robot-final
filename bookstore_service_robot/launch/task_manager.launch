@@ -1,0 +1,16 @@
+<launch>
+  <node pkg="bookstore_service_robot"
+        type="qr_reader.py"
+        name="qr_reader"
+        output="log">
+    <param name="image_topic" value="/camera/rgb/image_raw"/>
+  </node>
+
+  <node pkg="bookstore_service_robot"
+        type="task_manager.py"
+        name="task_manager"
+        output="screen">
+    <param name="mission_file" value="$(find bookstore_service_robot)/config/mission.yaml"/>
+    <param name="report_file" value="$(find bookstore_service_robot)/reports/mission_report.txt"/>
+  </node>
+</launch>

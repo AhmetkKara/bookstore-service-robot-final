@@ -1,0 +1,52 @@
+<launch>
+  <arg name="model" default="waffle_pi"/>
+  
+  <param name="use_sim_time" value="true"/>
+  <env name="TURTLEBOT3_MODEL" value="$(arg model)"/>
+
+  <env name="GAZEBO_MODEL_PATH"
+       value="$(find bookstore_service_robot)/models:$(find aws_robomaker_bookstore_world)/models:$(optenv GAZEBO_MODEL_PATH)"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find aws_robomaker_bookstore_world)/worlds/bookstore.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <param name="robot_description"
+         command="$(find xacro)/xacro '$(find turtlebot3_description)/urdf/turtlebot3_waffle_pi.urdf.xacro'"/>
+
+  <node pkg="gazebo_ros"
+        type="spawn_model"
+        name="spawn_urdf"
+        args="-urdf -model turtlebot3_waffle_pi -x 0.0 -y 0.0 -z 0.01 -param robot_description"
+        output="screen"/>
+
+  <node pkg="gazebo_ros"
+        type="spawn_model"
+        name="spawn_qr_novel_section"
+        args="-sdf -model qr_novel_section -file $(find bookstore_service_robot)/models/qr_novel_section/model.sdf -x -5.60 -y -3.08 -z 0.22 -Y 1.5708"
+        output="screen"/>
+
+  <node pkg="gazebo_ros"
+        type="spawn_model"
+        name="spawn_qr_checkout_area"
+        args="-sdf -model qr_checkout_area -file $(find bookstore_service_robot)/models/qr_checkout_area/model.sdf -x 0.97 -y -3.67 -z 0.22 -Y 1.5708"
+        output="screen"/>
+
+  <node pkg="gazebo_ros"
+        type="spawn_model"
+        name="spawn_qr_science_section"
+        args="-sdf -model qr_science_section -file $(find bookstore_service_robot)/models/qr_science_section/model.sdf -x 6.35 -y 1.07 -z 0.22 -Y 1.5708"
+        output="screen"/>
+
+  <node pkg="gazebo_ros"
+        type="spawn_model"
+        name="spawn_qr_information_desk"
+        args="-sdf -model qr_information_desk -file $(find bookstore_service_robot)/models/qr_information_desk/model.sdf -x -0.01 -y 5.58 -z 0.22 -Y 1.5708"
+        output="screen"/>
+
+</launch>
