@@ -122,15 +122,6 @@ roslaunch bookstore_service_robot navigation.launch
 
 RViz açıldıktan sonra robotun başlangıç konumu harita üzerinde **2D Pose Estimate** ile ayarlanır.
 
-## Kamera Görüntüsünü Açma
-
-QR kodun kamerada görünüp görünmediğini kontrol etmek için isteğe bağlı olarak şu komut kullanılabilir:
-
-```bash
-source ~/bookstore_final_ws/devel/setup.bash
-rqt_image_view /camera/rgb/image_raw
-```
-
 ## Görev Sistemini Başlatma
 
 Üçüncü terminalde task manager ve QR reader başlatılır:
