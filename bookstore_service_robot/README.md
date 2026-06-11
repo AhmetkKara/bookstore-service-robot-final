@@ -1,32 +1,47 @@
-# Bookstore Service Robot - QR Verified Navigation
+# Bookstore Service Robot
 
-This project was developed for the Introduction to Robotics final assignment.
+Bu projede Gazebo ortamında çalışan bir TurtleBot3 robotu, kitapçı ortamında belirlenen görev noktalarına sırayla gitmektedir. Robot her noktaya ulaştıktan sonra kamera üzerinden QR kodu okuyarak doğru konumda olup olmadığını kontrol eder. Görevlerin sonunda başarılı, atlanan veya başarısız olan noktalar için bir rapor oluşturulur.
 
-The robot operates in the AWS RoboMaker Bookstore Gazebo environment. It uses SLAM for mapping, AMCL and move_base for navigation, and QR code verification for task completion.
+## Kullanılan Sistem
 
-## Platform
-
-* ROS1 Noetic
+* ROS Noetic
 * Gazebo
 * TurtleBot3 Waffle Pi
 * AWS RoboMaker Bookstore World
 * Python
-* OpenCV QRCodeDetector
+* OpenCV
+* AMCL
+* move_base
+* map_server
 
-## Project Features
+## Projede Yapılanlar
 
-* Gazebo bookstore simulation environment
-* TurtleBot3 Waffle Pi robot with RGB camera
-* SLAM map creation
-* Saved map files in `maps/`
-* AMCL localization
-* Navigation with `move_base`
-* Multi-task waypoint system
-* QR verification at each task point
-* Timeout and retry handling
-* Mission report generation
+Projede öncelikle kitapçı ortamı Gazebo üzerinde çalıştırıldı. Daha sonra robotun bu ortamda kullanabileceği harita oluşturuldu ve `maps` klasörüne kaydedildi. Robotun harita üzerinde konumunu bulması için AMCL, hedeflere gitmesi için ise move_base kullanıldı.
 
-## Repository Structure
+Görev noktaları ve QR kod bilgileri `config/mission.yaml` dosyasında tutulmaktadır. Task manager node’u bu dosyayı okuyarak robotu sırayla hedeflere gönderir. Robot hedefe ulaştıktan sonra QR doğrulaması yapılır. QR kod doğru okunursa görev başarılı kabul edilir ve bir sonraki hedefe geçilir.
+
+## Dış Bağımlılık
+
+Bu depoda ana proje paketi bulunmaktadır:
+
+```text
+bookstore_service_robot
+```
+
+Simülasyon için AWS RoboMaker Bookstore World paketi de gereklidir. Bu paket aynı catkin workspace içindeki `src` klasöründe bulunmalıdır.
+
+Beklenen klasör yapısı şu şekildedir:
+
+```text
+bookstore_final_ws/
+└── src/
+    ├── bookstore_service_robot/
+    └── aws-robomaker-bookstore-world/
+```
+
+AWS paketi workspace içinde yoksa proje çalıştırılmadan önce `src` klasörüne eklenmelidir.
+
+## Klasör Yapısı
 
 ```text
 bookstore_service_robot/
@@ -51,29 +66,33 @@ bookstore_service_robot/
 ├── src/
 │   ├── task_manager.py
 │   └── qr_reader.py
+├── world/
+│   └── bookstore_qr.world
 ├── CMakeLists.txt
 ├── package.xml
 └── README.md
 ```
 
-## Task Locations
+## Görev Noktaları
 
-The mission includes four task locations:
+Robotun gitmesi gereken noktalar `mission.yaml` dosyasında tanımlıdır.
+
+Projede kullanılan görev noktaları:
 
 * NOVEL_SECTION
 * CHECKOUT_AREA
 * SCIENCE_SECTION
 * INFORMATION_DESK
 
-The waypoint coordinates and expected QR messages are stored in:
+Her nokta için hedef koordinatı ve beklenen QR metni bulunmaktadır. Örneğin bir görev noktasına gidildiğinde robotun okuması gereken QR metni şu formatta olur:
 
 ```text
-config/mission.yaml
+LOCATION=NOVEL_SECTION
 ```
 
-## How to Run
+## Projeyi Derleme
 
-### 1. Build the Workspace
+Workspace klasörüne girilip proje derlenir:
 
 ```bash
 cd ~/bookstore_final_ws
@@ -81,59 +100,89 @@ catkin_make
 source devel/setup.bash
 ```
 
-### 2. Start Simulation
+## Simülasyonu Başlatma
+
+İlk terminalde Gazebo ortamı başlatılır:
 
 ```bash
 source ~/bookstore_final_ws/devel/setup.bash
 roslaunch bookstore_service_robot simulation.launch
 ```
 
-### 3. Start Navigation
+Bu komut kitapçı ortamını, robotu ve QR kod modellerini Gazebo içinde başlatır.
 
-Open a new terminal:
+## Navigasyonu Başlatma
+
+İkinci terminalde navigation başlatılır:
 
 ```bash
 source ~/bookstore_final_ws/devel/setup.bash
 roslaunch bookstore_service_robot navigation.launch
 ```
 
-After RViz opens, set the robot initial pose using **2D Pose Estimate**.
+RViz açıldıktan sonra robotun başlangıç konumu harita üzerinde **2D Pose Estimate** ile ayarlanır.
 
-### 4. Start Task Manager and QR Reader
+## Kamera Görüntüsünü Açma
 
-Open a new terminal:
+QR kodun kamerada görünüp görünmediğini kontrol etmek için isteğe bağlı olarak şu komut kullanılabilir:
+
+```bash
+source ~/bookstore_final_ws/devel/setup.bash
+rqt_image_view /camera/rgb/image_raw
+```
+
+## Görev Sistemini Başlatma
+
+Üçüncü terminalde task manager ve QR reader başlatılır:
 
 ```bash
 source ~/bookstore_final_ws/devel/setup.bash
 roslaunch bookstore_service_robot task_manager.launch
 ```
 
-The task manager sends navigation goals, waits for the robot to reach the target, verifies the QR code, and then continues to the next task.
+Bu aşamadan sonra robot görev noktalarına sırayla gitmeye başlar. Her noktaya ulaştığında QR doğrulaması yapılır. Doğrulama başarılı olursa bir sonraki göreve geçilir.
 
-### 5. Show Mission Report
+## Görev Raporu
+
+Görev sonunda oluşan rapor şu dosyaya yazılır:
+
+```text
+reports/mission_report.txt
+```
+
+Raporu terminalden görmek için:
 
 ```bash
 cat ~/bookstore_final_ws/src/bookstore_service_robot/reports/mission_report.txt
 ```
 
-## SLAM and Map Saving
+## Harita Oluşturma
 
-To create a map, run the simulation and SLAM:
+Harita oluşturmak için önce simülasyon başlatılır:
 
 ```bash
+source ~/bookstore_final_ws/devel/setup.bash
 roslaunch bookstore_service_robot simulation.launch
+```
+
+Daha sonra yeni bir terminalde SLAM başlatılır:
+
+```bash
+source ~/bookstore_final_ws/devel/setup.bash
 roslaunch bookstore_service_robot slam.launch
 ```
 
-After mapping, save the map:
+Robot ortamda gezdirildikten sonra harita şu komutla kaydedilir:
 
 ```bash
 rosrun map_server map_saver -f ~/bookstore_final_ws/src/bookstore_service_robot/maps/map
 ```
 
-## ROS Topics
+Bu işlem sonucunda `map.yaml` ve `map.pgm` dosyaları oluşur.
 
-Important topics used in the project:
+## Kullanılan ROS Topicleri
+
+Projede kullanılan başlıca topicler:
 
 * `/camera/rgb/image_raw`
 * `/qr_text`
@@ -143,44 +192,44 @@ Important topics used in the project:
 * `/move_base/goal`
 * `/move_base/status`
 
-## ROS Action
-
-The task manager uses the `/move_base` action server to send navigation goals.
-
-## Nodes
+## Kullanılan Node’lar
 
 ### task_manager.py
 
-* Reads task locations from `mission.yaml`
-* Sends goals to `move_base`
-* Waits for navigation result
-* Verifies QR code after reaching the goal
-* Handles timeout and retry logic
-* Saves the final report
+Bu node görevlerin yönetildiği ana node’dur. `mission.yaml` dosyasındaki hedefleri okur, move_base üzerinden robota hedef gönderir, hedefe ulaşıldıktan sonra QR doğrulamasını bekler ve sonuçları rapor dosyasına kaydeder.
 
 ### qr_reader.py
 
-* Subscribes to the camera image topic
-* Detects QR codes using OpenCV
-* Publishes detected QR text to `/qr_text`
+Bu node kameradan görüntü alır ve OpenCV kullanarak QR kod okumaya çalışır. Okunan QR metni `/qr_text` topic’i üzerinden yayınlanır.
 
-## Error Handling
+## Hata Kontrolü
 
-The system supports:
+Projede bazı hata durumları için kontrol eklenmiştir:
 
-* Navigation timeout
-* Navigation retry
-* QR timeout
-* QR retry
-* SUCCESS / SKIPPED / FAIL report output
+* Robot hedefe ulaşamazsa timeout oluşur.
+* Hedefe ulaşılamazsa tekrar deneme yapılır.
+* QR kod okunamazsa belirli süre beklenir.
+* QR doğrulanamazsa görev başarısız veya atlandı olarak rapora yazılır.
 
-## Demo Video
+## Genel Çalışma Sırası
 
-The demo video should show:
+```text
+Gazebo başlatılır.
+Navigation başlatılır.
+RViz üzerinden robotun başlangıç konumu ayarlanır.
+Task manager başlatılır.
+Robot ilk hedefe gider.
+Hedefe ulaşınca QR doğrulaması yapılır.
+QR doğruysa sıradaki hedefe geçilir.
+Tüm görevler bitince rapor oluşturulur.
+```
 
-1. Gazebo bookstore world
-2. RViz map and localization
-3. Navigation to task points
-4. QR code verification
-5. Final mission report
+## Demo Videosunda Gösterilenler
 
+Demo videosunda genel olarak şu adımlar gösterilecektir:
+
+1. Gazebo ortamının açılması
+2. RViz üzerinde harita ve robot konumu
+3. Robotun görev noktalarına gitmesi
+4. QR kod doğrulaması
+5. Görev raporunun görüntülenmesi
